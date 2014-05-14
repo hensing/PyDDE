@@ -28,6 +28,10 @@ Windows systems written in C.
 
 RELEASE NOTES
 =============
+0.2.2_2to3
+
+-- Patched 0.2.2 for python3
+   (patch via [renato](https://aur.archlinux.org/packages.php?ID=48356))
 
 0.2.2  -  07 December 2008
 
