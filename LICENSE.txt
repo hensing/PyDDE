@@ -1,0 +1,41 @@
+PyDDE, a cross-platform numerical solver for systems of delay differential 
+equations with switches based on ddesolve for R.
+Copyright (C) 2005-2008  Benjamin J. Cairns
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License Version 2
+as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+=============================
+License notice from ddesolve:
+=============================
+
+'ddesolve' is based on Simon Wood's numerical routinues from solv95.
+
+solv95 can be found at http://www.maths.bath.ac.uk/~sw283/simon/dde.html
+
+Simon has generously given us permission to publish 'ddesolve' (including his 
+embedded routines) under the GNU GENERAL PUBLIC LICENSE Version 2
+
+===========================
+License notice from Solv95:
+===========================
+
+The code is provided under the following conditions:
+
+    * It comes with absolutely no warranty of any sort.
+    * You may pass on the code or any part of it modified or unmodified only if
+      you do so (i) without profit (ii) under the conditions listed here and
+      (iii) with full acknowledgment of authorship.
+
+If you do not accept these conditions then do not download the code.
+

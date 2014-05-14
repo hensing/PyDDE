@@ -1,0 +1,20 @@
+Metadata-Version: 1.0
+Name: PyDDE
+Version: 0.2.2
+Summary: PyDDE is a solver for delay differential equations written in Python and C.
+Home-page: http://users.ox.ac.uk/~clme1073/python/PyDDE/
+Author: Benjamin J. Cairns
+Author-email: ben.cairns@ceu.ox.ac.uk
+License: GPL
+Description: PyDDE is an open source numerical solver for systems of delay differential equations (DDEs), implemented as a Python package and written in both Python and C.  It is built around the numerical routines of the R package ddesolve, which is itself based on Simon Wood's Solv95, a DDE solver for Microsoft Windows systems written in C.
+        
+        PyDDE can solve a wide range of ODE and DDE models with discontinuities that may have state-dependent effects but state-independent timings.  Simulation is handled by an adaptively-stepping embedded RK2(3) scheme with cubic Hermite interpolation for calculation of delay terms.  Some of the advantages of PyDDE are that it is fast, efficient and allows rapid prototyping of scriptable models in a free, platform-independent environment.
+Keywords: delay differential equation solver dde switches solv95 ddesolve pydde
+Platform: Any
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: Scientific/Engineering :: Mathematics
+Classifier: Topic :: Software Development :: Libraries :: Python Modules

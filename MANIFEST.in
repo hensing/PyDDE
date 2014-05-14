@@ -1,0 +1,7 @@
+include INSTALL.txt
+include LICENSE.txt
+include MANIFEST.in
+recursive-include PyDDE/test *.py
+recursive-include PyDDE/src *.c *.h
+recursive-include PyDDE/doc *.pdf *.tex *.eps
+

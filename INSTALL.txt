@@ -1,0 +1,115 @@
+
+INTRODUCTION
+============
+
+The package has been successfully installed and used with: 
+
+Apple PowerMac G5,    OS 10.4.6,  Python 2.3.?,   Numeric 24.2, gcc 4.0.0;
+Apple MacBook Pro,    OS 10.4.8,  default Python, Numeric 24.2, gcc 4.0.1;
+Apple MacBook Pro,    OS 10.4.8,  Python 2.4.3,   Numeric 24.2, gcc 4.0.1;
+Apple MacBook Pro,    OS 10.4.8,  Python 2.5.0,   NumPy 1.0.2,  gcc 4.0.1;
+Apple MacBook Pro,    OS 10.4.10, Python 2.5.1,   NumPy 1.0.3,  gcc 4.0.1;
+Microsoft Windows XP, Cygwin,     Python 2.4.?,   Numeric ??.?, gcc 3.x.
+
+I have no other test systems available, but would welcome reports of successful (and unsuccessful) installations on other systems.
+
+
+
+SYSTEM REQUIREMENTS
+===================
+
+In order to use PyDDE you will need to have Python installed with the Numeric or NumPy packages.  Numeric or NumPy can be obtained via 
+
+  http://numpy.scipy.org/ 
+  
+If you install Numeric but not NumPy, see the note below.  If your system doesn't have a Python distribution included, you can find one to suit your needs at
+
+  http://www.python.org/
+
+Note that some combinations of Python and Numeric/NumPy tend to be faster than others.  For example, using Numeric 24.2, calculations for the included test.py take an average of 3.30 seconds with Python 2.3.5 (OS X version), but only 2.27 seconds on 2.4.3 (DarwinPorts) and 2.82 seconds on 2.5.0 (DarwinPorts).  Again on Python 2.5.0 (DarwinPorts), but with with NumPy 1.0.2 instead of Numeric, it takes 2.88 seconds.
+  
+
+You will also (normally) need access to the same compiler that was used to create your Python distribution.  If you installed Python from a binary (executable) and you find that PyDDE won't install because you don't have the right compiler, there are various ways to fix the situation.  PyDDE may be available as a binary for some distributions (particularly MS Windows); check the PyDDE web page for more information. Alternatively, you could try installing Python another way (e.g. using Fink on an Apple OS 10.x machine or Cygwin on a Microsoft Windows machine)!
+
+
+Starting with version 0.2.1, PyDDE depends on NumPy.  However, PyDDE does not presently take advantage of any of the array addressing or C-API improvements in NumPy.  Thus, it is possible to get PyDDE working with the older Numeric, instead.  To achieve this, change the line
+
+  #include <numpy/arrayobject.h>
+
+in the file wrapper.c to read
+
+  #include <Numeric/arrayobject.h>
+
+to maintain backwards compatibility, or even
+
+  #include <numpy/oldnumeric.h>
+
+if you are feeling contrarian.  More about NumPy and SciPy can be found at
+
+  http://www.scipy.org/
+
+
+
+INSTALLATION
+============
+
+PyDDE is installed like many other Python packages.  First, if you have not 
+already done so download the latest source distribution from:
+
+  http://seis.bris.ac.uk/~bzzbjc/python/PyDDE/
+
+Before installing, please also ensure that either NumPy or Numeric is installed.  
+
+
+Unpack the source distribution to a suitable location, open a command or 
+terminal window, change to the root directory of the source distribution (which 
+will contain setup.py) and type:
+
+  $ python setup.py install
+
+Of course, if you usually type something else to start Python running, replace
+`python' in the above with that command.  That should be all that is necessary but read on if you have trouble.  
+
+
+I have received reports that current versions of NumPy do not automatically copy the required header files to Python's include/ directory.  To make these available, simply copy (or add a symbolic link to) the numpy/core/include/numpy/ directory from your Python distribution's site-packages/ directory into your Python distribution's \verb+include+ directory, e.g. /usr/local/include/python2.5/.  For example, on a UNIX-style system, you might type:
+
+  cd /usr/local/include/python2.5/
+  ln -s /usr/local/lib/python2.5/site-packages/numpy/core/include/numpy numpy
+
+You should, of course, modify these commands to match your own system.  (Thanks to Josh Lippai for this information.)
+
+
+If you'd like to add any further compiler flags, such as -msse3 for further optimisation of code, you can do so by editing the extra_compile_args field in setup.py.  This is currently empty (i.e. "") but could be set to any string that makes sense for your compiler (e.g. "-msse3"; note that the addition of the -msse flag seems to have little or no effect on run times, but your mileage may vary).
+
+
+If you have a version of Python earlier than 2.4, you will probably receive a warning:
+
+  UserWarning: Unknown distribution option: `package_data'
+
+This is safely ignored, but if this happens you will need to make a copy of the PyDDE documentation (the PDF and/or TeX files in the ./doc directory of the
+distribution) if you want it for future reference.
+
+
+Note that if you don't have Numeric or NumPy installed, you should get an error during installation as these are required at compilation time.  You may also get warnings (rather than errors) from the C compiler used by Python to
+install the module; these may (usually!) be safely ignored.
+  
+  
+
+TESTING
+=======
+
+You can test PyDDE using the test.py in the ./test subdirectory, found either in the source distribution folder and, if you have Python 2.4 or later, also in the PyDDE directory where the package is installed.
+
+
+The script test.py computes the solutions to systems of ordinary differential equations and delay differential equations (with or without switches), and times these computations.  These systems of equations are the same as those given as examples in the original Solv95.
+
+
+The test script will also try to plot the solutions using the magnificent PyX
+(http://pyx.sourceforge.net/), a graphics and typsetting package for Python that
+uses TeX (http://www.ctan.org/).  PyX will place EPS files plotting each of the
+examples in the same directory as test.py.  
+
+
+If you don't have PyX installed, don't worry, but you will have to find your own way of plotting the results!
+
+
