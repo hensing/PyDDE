@@ -23,20 +23,20 @@ except ImportError:
         try:
             from Numeric import *
         except:
-            print "Could not import Numeric, numpy and scipy.  Test cannot run."
-            raise StandardError, "PyDDE test script."
+            print("Could not import Numeric, numpy and scipy.  Test cannot run.")
+            raise Exception("PyDDE test script.")
 
 try:
     import PyDDE.pydde as p
 except ImportError:
-    print "Could not import PyDDE.pydde.  Test cannot run."
-    raise StandardError, "PyDDE test script."
+    print("Could not import PyDDE.pydde.  Test cannot run.")
+    raise Exception("PyDDE test script.")
 
 try:
     import timing
     timeit = 1
 except ImportError:
-    print "Could not import timing module.  No timing of tests will occur."
+    print("Could not import timing module.  No timing of tests will occur.")
     timeit = 0
     
 '''
@@ -51,7 +51,7 @@ if timeit:
 try:
     del ode_eg
 except:
-    print "DDE Test: Running for the first time..."
+    print("DDE Test: Running for the first time...")
 
 ode_eg = p.dde()
 
@@ -85,7 +85,7 @@ This model is a model for Nicholson's (1954) blowflies, as given by Gurney and N
 try:
     del dde_eg
 except:
-    print "DDE Test: Running for the first time..."
+    print("DDE Test: Running for the first time...")
 
 dde_eg = p.dde()
 
@@ -115,7 +115,7 @@ SDDE (DDE with switches) example from Solv95 distribution.
 try:
     del sdde_eg
 except:
-    print "DDE Test: Running for the first time..."
+    print("DDE Test: Running for the first time...")
 
 sdde_eg = p.dde()
 
@@ -160,7 +160,7 @@ ddetitles = ["blowflies"]
 
 if timeit:
     timing.finish()
-    print str(timing.seconds())+"."+str(timing.milli())+" seconds"
+    print(str(timing.seconds())+"."+str(timing.milli())+" seconds")
     
     
 try:
@@ -248,7 +248,7 @@ try:
     sddepp.writeEPSfile("../test/sdde_eg.eps")
         
 except ImportError:
-    print "DDE Test: Could not import PyX!  Cannot print output from examples."
+    print("DDE Test: Could not import PyX!  Cannot print output from examples.")
 except:
-    print "DDE Test: An error occured during attempt to plot data."
+    print("DDE Test: An error occured during attempt to plot data.")
     raise

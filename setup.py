@@ -27,7 +27,7 @@ PyDDE can solve a wide range of ODE and DDE models with discontinuities that may
                              # Not sure why, but the next line doesn't work
                              # with some Python versions. Removing it is OK.
                              #libraries=["python"+get_config_var('VERSION')],
-                             extra_compile_args=[""]
+                             extra_compile_args=["-I."]
                              )
                   ],
       packages=['PyDDE'],
