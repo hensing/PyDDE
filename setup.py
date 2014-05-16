@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 "setup for PyDDE"
+import sys
+
 from warnings import warn
 from setuptools import setup, find_packages, Extension
 
@@ -15,12 +17,20 @@ REQUIREMENTS = [
     'numpy',
 ]
 
+# mac osx 10.9 clang fix
+if sys.platform == 'darwin':
+    EXTRA_COMPILE_ARGS = [
+        '-Wno-error=unused-command-line-argument-hard-error-in-future']
+else:
+    EXTRA_COMPILE_ARGS = []
+
 
 EXT_MODULES = [
     Extension(
         "PyDDE.ddesolve",
         sources=['PyDDE/src/ddeq.c', 'PyDDE/src/ddesolve95.c',
-                 'PyDDE/src/wrapper.c']),
+                 'PyDDE/src/wrapper.c'],
+        extra_compile_args = EXTRA_COMPILE_ARGS),
 ]
 
 
