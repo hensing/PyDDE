@@ -30,7 +30,7 @@ EXT_MODULES = [
         "PyDDE.ddesolve",
         sources=['PyDDE/src/ddeq.c', 'PyDDE/src/ddesolve95.c',
                  'PyDDE/src/wrapper.c'],
-        extra_compile_args = EXTRA_COMPILE_ARGS),
+        extra_compile_args=EXTRA_COMPILE_ARGS),
 ]
 
 
@@ -61,14 +61,10 @@ setup(
     maintainer="Henning Dickten",
     maintainer_email="hdickten@uni-bonn.de",
     url="https://www.github.com/hensing/PyDDE",
-    #py_modules=['PyDDE.pydde'],
     requires=REQUIREMENTS,
-    #extras_require=extras_require,
     packages=find_packages(),
-    #packages=['PyDDE'],
-    #scripts=scripts,
     ext_modules=EXT_MODULES,
     include_package_data=True,
     include_dirs=INCLUDE_DIRS,
-    package_data={'PyDDE' : ['doc/*.pdf', 'test/*.py']},
+    package_data={'PyDDE': ['doc/*.pdf', 'test/*.py']},
 )

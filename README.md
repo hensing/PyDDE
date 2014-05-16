@@ -4,7 +4,7 @@ PyDDE: Python/C DDE solver
 This is an updated version of PyDDE: Python/C DDE solver
 Original code [here](http://users.ox.ac.uk/~clme1073/python/PyDDE/)
 
-This version was fixed for and tested on Ubuntu 14.04 LTS
+This version was fixed for and tested on Ubuntu 14.04 LTS and Mac OSX 10.9
 
 ---  
 
