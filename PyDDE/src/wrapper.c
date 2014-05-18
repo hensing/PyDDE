@@ -1,8 +1,11 @@
 /***************************************************************************/
 /* Some original code by Simon N. Wood, 1999.                              */
 /* Updated for Python port by Benjamin J. Cairns, 2005-2008.               */
-/* <ben.cairns@ceu.ox.ac.uk>                                               */
+/* Updated/fixed memory leaks by Henning Dickten, 2014.                    */
+/* <hdickten@uni-bonn.de>                                                  */
 /***************************************************************************/
+//TODO: update API to NPY_1_7
+//#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include <Python.h>
 #include <math.h>
@@ -39,9 +42,9 @@ static PyObject *storehistory_func = NULL;
 void ddeinitstate(double *s, double *c, double t)
 /* initialise state variables and any global constants here, you can use c */
 {
-	int i;
-	for(i=0;i<data.no_var;i++)
-		s[i]=initstateDbl[i];
+    int i;
+    for(i=0;i<data.no_var;i++)
+        s[i]=initstateDbl[i];
 }
 
 void statescale(double* scale) {
@@ -58,7 +61,7 @@ double *dblArray_from_PyArray(PyObject *arrayPy) {
     PyArrayObject *contig_array;
     int n, i;
     double *array;
-        
+
     // Next line handles scalars.and non-contiguous arrays
     contig_array = (PyArrayObject *)PyArray_ContiguousFromObject(arrayPy, PyArray_DOUBLE, 1, 0);
     //contig_array = (PyArrayObject *)arrayPy;
@@ -71,7 +74,7 @@ double *dblArray_from_PyArray(PyObject *arrayPy) {
         return NULL;
     }
     else {
-        
+
         n = contig_array->dimensions[0];
         //printf("Allocating in dblArray_from_PyArray with %d elements.\n",  n);
         array = (double *)calloc(n, sizeof(double));
@@ -79,43 +82,43 @@ double *dblArray_from_PyArray(PyObject *arrayPy) {
             array[i] = *(double *)(contig_array->data + i*contig_array->strides[0]);
         }
     }
-    
+
     // Free up the reference to arrayPy or its copy
     Py_DECREF(contig_array);
-    
+
     // Note receiver must free
     return array;
 }
 
 PyObject *pyArray_from_DblArray(double *dblArray, int size) {
-    
+
     PyObject *pyArray;
     PyArrayObject *pyA;
     int i;
-    
+
     pyArray = PyArray_FromDims(1,&size,PyArray_DOUBLE);
     //pyA = (PyArrayObject *)PyArray_ContiguousFromObject(pyArray, PyArray_DOUBLE, 1, 1);
     pyA = (PyArrayObject *)pyArray;
-    
+
     for (i=0;i<size;i++) {
         *(double *)(pyA->data + \
                     i*pyA->strides[0]) = dblArray[i];
     }
-    
+
     // Note receiver must also Py_DECREF
     return pyArray;
 }
 
 PyObject *pyArray2_from_DblArray2(double **dblArray, int *size) {
-    
+
     PyObject *pyArray;
     PyArrayObject *pyA;
     int i,j;
-    
+
     pyArray = PyArray_FromDims(2,size,PyArray_DOUBLE);
     //pyA = (PyArrayObject *)PyArray_ContiguousFromObject(pyArray, PyArray_DOUBLE, 2, 2);
     pyA = (PyArrayObject *)pyArray;
-    
+
     for (j=0;j<size[0];j++) {
         for (i=0;i<size[1];i++) {
             *(double *)(pyA->data + \
@@ -123,7 +126,7 @@ PyObject *pyArray2_from_DblArray2(double **dblArray, int *size) {
                         j*pyA->strides[0]) = dblArray[i][j];
         }
     }
-    
+
     // Note receiver must also Py_DECREF
     return pyArray;
 }
@@ -132,9 +135,9 @@ PyObject *pyArray2_from_DblArray2(double **dblArray, int *size) {
 void print_PyArray(PyObject *array) {
     PyArrayObject *a;
     int i;
-    
+
     a = (PyArrayObject *)array;
-    
+
     //printf("-- This is print_PyArray.\n");
     //printf("-- ... nd = %d\n", a->nd);
     //printf("-- ... dim. 1 size = %d\n", a->dimensions[0]);
@@ -156,7 +159,7 @@ extern double pastgradient(int i, double t, int markno);
 extern double pastvalue(int i, double t, int markno);
 
 // Wrapper for pastgradient
-PyObject *wrap_pastgradient(PyObject *self, PyObject *args) {
+static PyObject *wrap_pastgradient(PyObject *self, PyObject *args) {
     int j,k;
     double tt, result;
     if (!PyArg_ParseTuple(args,"idi",&j,&tt,&k)) {
@@ -168,7 +171,7 @@ PyObject *wrap_pastgradient(PyObject *self, PyObject *args) {
 }
 
 // Wrapper for pastvalue
-PyObject *wrap_pastvalue(PyObject *self, PyObject *args) {
+static PyObject *wrap_pastvalue(PyObject *self, PyObject *args) {
     int j,k;
     double tt, result;
     if (!PyArg_ParseTuple(args,"idi",&j,&tt,&k)) {
@@ -188,14 +191,14 @@ PyObject *wrap_pastvalue(PyObject *self, PyObject *args) {
 /* vextern void freeglobaldata(); */
 
 // Wrapper for freeglobaldata
-PyObject *wrap_freeglobaldata(PyObject *self, PyObject *args) {
+static PyObject *wrap_freeglobaldata(PyObject *self, PyObject *args) {
     int wipeit;
-    
+
     if (!PyArg_ParseTuple(args,"i",&wipeit)) {
         PyErr_SetString(PyExc_TypeError, "Could not parse arguments in 'clean'!");
         return Py_BuildValue("i",0);
     }
-    
+
     //printf("Cleaning global data.\n");
     if (wipeit) {
         freeglobaldata();
@@ -210,7 +213,7 @@ PyObject *wrap_freeglobaldata(PyObject *self, PyObject *args) {
 /*********************/
 
 // The main function for solving things
-PyObject *wrap_dde(PyObject *self, PyObject *args) {
+static PyObject *wrap_dde(PyObject *self, PyObject *args) {
     // Variables from PROB
     PyObject *initstateObj, *statescaleObj, *cObj, *otimesObj;
     PyObject *gradObj, *switchfunctionsObj, *mapObj, *storehistoryObj;
@@ -221,9 +224,9 @@ PyObject *wrap_dde(PyObject *self, PyObject *args) {
 
     // Ensure variables initialised!
     failed = 0;
-    
+
     //printf("This is dde\n");
-        
+
     // get the arguments, two tuples giving problem and solver parameters
     if (!PyArg_ParseTuple(args,"(iiiiiiddOOOOOOO)(dldO)",\
                           &no_vars,&no_cons,&nhv,&nlag,&nsw,&no_otimes,\
@@ -238,10 +241,10 @@ PyObject *wrap_dde(PyObject *self, PyObject *args) {
     cDbl = dblArray_from_PyArray(cObj);
     initstateDbl = dblArray_from_PyArray(initstateObj);
     otimesDbl = dblArray_from_PyArray(otimesObj);
-    
+
     //printf("no_vars = %d, no_cons = %d, nhv = %d\n", no_vars, no_cons, nhv);
     //printf("dt = %f\n", dt);
-    
+
     // Check that the user-supplied functions are callable and set them up for callbacks
     if (!PyCallable_Check(gradObj)) { // gradient
         PyErr_SetString(PyExc_TypeError, "The 'grad' function must be a callable object!");
@@ -275,21 +278,21 @@ PyObject *wrap_dde(PyObject *self, PyObject *args) {
         storehistory_func = storehistoryObj; Py_INCREF(storehistory_func); 
         //printf("storehistory_func = %p\n",storehistory_func);
     }
-    
+
     // Initialise settings
     settings[0] = tol;     //printf("tol = %f\n", tol);
     settings[1] = t0;      //printf("t0 = %f\n", t0);
     settings[2] = t1;      //printf("t1 = %f\n", t1);
     settings[3] = dt;      //printf("dt = %f\n", dt);
     settings[4] = hbsize;  //printf("hbsize = %d\n", hbsize);
-    
+
     // Now to the meat of the function...
     //printf("Data successfully loaded.\n");
     setupglobaldata(no_vars, nsw, settings, otimesDbl, no_otimes);
     numerics(cDbl, 0);
     if (failed) mESSAGE("Integration failed!  Outputs are None.");
     else mESSAGE("Integration completed without error.");
-    
+
     if (failed) { // Something went wrong (user should see why) so return None.
         Py_INCREF(Py_None); // Be       nice to the reference count.
     //    Py_INCREF(Py_None); // Be extra nice to the reference count.
@@ -297,23 +300,23 @@ PyObject *wrap_dde(PyObject *self, PyObject *args) {
     //    tPy = Py_None;
     }
     else { // Nothing went wrong.  Do whatever necessary to wrap it up.
-        
+
         outdims[0] = data.vals_ind;
         outdims[1] = no_vars+1;
         //printf("... data.outcount = %d\n", data->outcount);
-        
+
         dataPy = pyArray2_from_DblArray2(data.vals, outdims); //printf("dataPy = %p, ", dataPy);
         //OBSOLETE: tPy = pyArray_from_DblArray(data->t, data->outcount); //printf("tPy = %p\n", tPy);
-        
+
     }
-    
+
     freeglobaldata();
-    
+
     // Free memory.  DO NOT DECREMENT OBJECT REFERENCES FROM PyArgs_ParseTuple()
     free(initstateDbl); free(statescaleDbl); free(cDbl); free(otimesDbl);
     /* DO NOT wrap_freeglobaldata(1); this is done on the Python side by calling clean(1) */
     Py_DECREF(grad_func);Py_DECREF(switchfunctions_func);Py_DECREF(map_func);Py_DECREF(storehistory_func);
-    
+
     return Py_BuildValue("N",dataPy);
 }
 
@@ -327,30 +330,30 @@ PyObject *wrap_dde(PyObject *self, PyObject *args) {
 void switchfunctions(sw,s,c,t)
 double *sw,*s,*c,t;
 /* This routine sets the values of the switch functions. When the switch
-	functions pass through zero from positive to negative the state variables
-	may be reset in function map(). The switch functions should pass smoothly
-	through 0 and should never have both value and first derivative zero. The
-	same switch must not pass through zero from positive to negative more than
-	once in an integration timestep. An example of a switch function is:
-						sw[0]=sin(pi*t/30.0)
-	which passes through zero every 60 time units. Switches may include state
-	variables provided the above conditions are met. Note that to get 'Solver'
-	style switches define twice as many switches and let e.g. sw[1]=-sw[0] */
+    functions pass through zero from positive to negative the state variables
+    may be reset in function map(). The switch functions should pass smoothly
+    through 0 and should never have both value and first derivative zero. The
+    same switch must not pass through zero from positive to negative more than
+    once in an integration timestep. An example of a switch function is:
+                        sw[0]=sin(pi*t/30.0)
+    which passes through zero every 60 time units. Switches may include state
+    variables provided the above conditions are met. Note that to get 'Solver'
+    style switches define twice as many switches and let e.g. sw[1]=-sw[0] */
 { 
     PyObject *result,*arglist;
     PyObject *sPy,*cPy;
     double *currentdata;
     int i;
-    
+
     //printf("This is switchfunctions.\n");
-    
+
     // Get the double arrays into Python arrays
     sPy = pyArray_from_DblArray(s,no_vars);
     cPy = pyArray_from_DblArray(c,no_cons);
-    
+
     // Construct the argument list to pass back to the user-supplied function
     arglist = Py_BuildValue("(OOf)",sPy,cPy,t);
-    
+
     // Obtain the result, convert back to a double array and put it in the right place.
     result = PyEval_CallObject(switchfunctions_func,arglist);
     currentdata = dblArray_from_PyArray(result); // put the results somewhere
@@ -370,25 +373,25 @@ double *sw,*s,*c,t;
 void map(s,c,t,swno)
 double *s,*c,t;int swno;
 /* This routine is called whenever one of the switch functions passes through
-	zero. 'swno' is the number of the switch function. The state variables
-	can be changed discontinuously within this routine. eg:
+    zero. 'swno' is the number of the switch function. The state variables
+    can be changed discontinuously within this routine. eg:
    if (swno==1)
-	  { s[0]=coeff[1]*(s[0]);}
-	time and the coefficients should not be changed.
+      { s[0]=coeff[1]*(s[0]);}
+    time and the coefficients should not be changed.
 */
 { 
     PyObject *result,*arglist;
     PyObject *sPy,*cPy,*snewPy,*cnewPy;
     double *currentdata;
     int i;
-    
+
     //printf("This is map.\n");
-    
+
     sPy = pyArray_from_DblArray(s,no_vars);
     cPy = pyArray_from_DblArray(c,no_cons);
-    
+
     arglist = Py_BuildValue("(OOfi)",sPy,cPy,t,swno);
-    
+
     result = PyEval_CallObject(map_func,arglist);
     //printf("result = %p\n", result);
     if (!PyArg_ParseTuple(result,"OO",&snewPy,&cnewPy)) {
@@ -400,12 +403,12 @@ double *s,*c,t;int swno;
         return;
     }
     else {
-        
+
         currentdata = dblArray_from_PyArray(snewPy);
         for (i=0; i < no_vars; i++) {
             s[i] = currentdata[i];
         }
-        
+
         free(currentdata);
         currentdata = dblArray_from_PyArray(cnewPy);
         for (i=0; i < no_cons; i++) {
@@ -425,7 +428,7 @@ double *s,*c,t;int swno;
 void grad(g,s,c,t)
 double *g,*s,*c,t;
 /* This routine must provide the gradients g for the state variables s.
-	So ds[i]/dt=g[i]=fi(s,c,t) where c is the coefficient vector. lagged
+    So ds[i]/dt=g[i]=fi(s,c,t) where c is the coefficient vector. lagged
    variables may be accessed here using pastvalue(i,x,j) which returns the
    ith (starting at zero) lagged variable at time x, using lag pointer k
 
@@ -442,21 +445,21 @@ double *g,*s,*c,t;
     PyObject *sPy,*cPy;
     double *currentdata;
     int i;
-    
+
     //printf("This is grad.\n");
-    
+
     sPy = pyArray_from_DblArray(s,no_vars);
     cPy = pyArray_from_DblArray(c,no_cons);
-    
+
     arglist = Py_BuildValue("(OOf)",sPy,cPy,t);
     //printf("Got argument list.\n");    
-    
+
     //printf("grad_func = %p\n", grad_func);
     //printf("arglist = %p\n", arglist);
     //PyObject_Print(grad_func, stdout, 0);
     //PyObject_Print(arglist, stdout, 0);
     //printf("Continuing...\n");
-    
+
     //printf("grad_func = %p\n", grad_func);
     //printf("arglist = %p\n", arglist);
     result = PyEval_CallObject(grad_func,arglist);
@@ -469,7 +472,7 @@ double *g,*s,*c,t;
     for (i=0;i < no_vars;i++) {
         g[i] = currentdata[i];
     }
-        
+
     // Look after the reference counts to local variables
     Py_XDECREF(result);
     Py_DECREF(arglist);
@@ -482,8 +485,8 @@ double *g,*s,*c,t;
 void storehistory(his,ghis,g,s,c,t)
 double *his,*ghis,*g,*s,*c,t;
 /* This is the routine in which the values of the history variables at time
-	t are calculated and put in the array his, along with gradients in ghis,
-	using state variables s, gradients of s, g, and coefficients c
+    t are calculated and put in the array his, along with gradients in ghis,
+    using state variables s, gradients of s, g, and coefficients c
    e.g. if the state variable 2 is history variable 0, you would need the line:
    his[0]=s[2];ghis[0]=g[2];
 */
@@ -493,15 +496,15 @@ double *his,*ghis,*g,*s,*c,t;
     PyObject *hisPy = NULL,*ghisPy = NULL;
     double *currentdata;
     int i;
-    
+
     //printf("This is storehistory.\n");
-    
+
     sPy = pyArray_from_DblArray(s,no_vars);
     cPy = pyArray_from_DblArray(c,no_cons);
     gPy = pyArray_from_DblArray(g,no_vars);
-    
+
     arglist = Py_BuildValue("(OOOf)",gPy,sPy,cPy,t);
-    
+
     result = PyEval_CallObject(storehistory_func,arglist);
     if (!PyArg_ParseTuple(result,"OO",&hisPy,&ghisPy)) {
         PyErr_SetString(PyExc_TypeError, "Could not parse results of 'storehistory'!");
@@ -513,19 +516,19 @@ double *his,*ghis,*g,*s,*c,t;
         return;
     }
     else {
-        
+
         currentdata = dblArray_from_PyArray(hisPy);
         for (i=0;i < nhv;i++) {
             his[i] = currentdata[i];
         }
         //printf("Freeing in storehistory.\n");
         free(currentdata);
-        
+
         currentdata = dblArray_from_PyArray(ghisPy);
         for (i=0;i < nhv;i++) {
             ghis[i] = currentdata[i];
         }
-        
+
         //printf("Look after the reference counts to local variables\n");
         Py_XDECREF(result);
         Py_DECREF(arglist);
@@ -561,7 +564,7 @@ static PyMethodDef ddesolve_methods[] = {
     { "pastvalue", wrap_pastvalue, METH_VARARGS },
     { "clean", wrap_freeglobaldata, METH_VARARGS },
     { "dde", wrap_dde, METH_VARARGS },
-    { NULL, NULL } 
+    { NULL, NULL }
 }; 
 
 
