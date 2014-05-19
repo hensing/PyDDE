@@ -4,8 +4,7 @@
 /* Updated/fixed memory leaks by Henning Dickten, 2014.                    */
 /* <hdickten@uni-bonn.de>                                                  */
 /***************************************************************************/
-//TODO: update API to NPY_1_7
-//#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include <Python.h>
 #include <math.h>
@@ -59,27 +58,28 @@ void statescale(double* scale) {
 
 double *dblArray_from_PyArray(PyObject *arrayPy) {
     PyArrayObject *contig_array;
-    int n, i;
+    npy_intp num_dp, i;
     double *array;
 
     // Next line handles scalars.and non-contiguous arrays
-    contig_array = (PyArrayObject *)PyArray_ContiguousFromObject(arrayPy, PyArray_DOUBLE, 1, 0);
+    contig_array = (PyArrayObject *)PyArray_ContiguousFromObject(arrayPy, NPY_DOUBLE, 1, 0);
     //contig_array = (PyArrayObject *)arrayPy;
     if (contig_array == NULL) {
         return NULL;
     }
-    else if (contig_array->nd > 1) {
+    else if (PyArray_NDIM(contig_array) > 1) {
         PyErr_SetString(PyExc_TypeError, "Array is not (at most) 1-dimensional!");
         Py_DECREF(contig_array);
         return NULL;
     }
     else {
 
-        n = contig_array->dimensions[0];
+        num_dp = PyArray_DIMS(contig_array)[0];
         //printf("Allocating in dblArray_from_PyArray with %d elements.\n",  n);
-        array = (double *)calloc(n, sizeof(double));
-        for (i=0; i < n; i++) {
-            array[i] = *(double *)(contig_array->data + i*contig_array->strides[0]);
+        array = (double *)calloc(num_dp, sizeof(double));
+        for (i=0; i < num_dp; i++) {
+            array[i] = *(double *)(PyArray_DATA(contig_array) +
+                    i * PyArray_STRIDES(contig_array)[0]);
         }
     }
 
@@ -96,13 +96,13 @@ PyObject *pyArray_from_DblArray(double *dblArray, int size) {
     PyArrayObject *pyA;
     int i;
 
-    pyArray = PyArray_FromDims(1,&size,PyArray_DOUBLE);
+    pyArray = PyArray_FromDims(1,&size,NPY_DOUBLE);
     //pyA = (PyArrayObject *)PyArray_ContiguousFromObject(pyArray, PyArray_DOUBLE, 1, 1);
     pyA = (PyArrayObject *)pyArray;
 
-    for (i=0;i<size;i++) {
-        *(double *)(pyA->data + \
-                    i*pyA->strides[0]) = dblArray[i];
+    for (i=0; i < size; i++) {
+        *(double *)(PyArray_DATA(pyA) +
+                    i * PyArray_STRIDES(pyA)[0]) = dblArray[i];
     }
 
     // Note receiver must also Py_DECREF
@@ -115,15 +115,15 @@ PyObject *pyArray2_from_DblArray2(double **dblArray, int *size) {
     PyArrayObject *pyA;
     int i,j;
 
-    pyArray = PyArray_FromDims(2,size,PyArray_DOUBLE);
+    pyArray = PyArray_FromDims(2,size,NPY_DOUBLE);
     //pyA = (PyArrayObject *)PyArray_ContiguousFromObject(pyArray, PyArray_DOUBLE, 2, 2);
     pyA = (PyArrayObject *)pyArray;
 
     for (j=0;j<size[0];j++) {
         for (i=0;i<size[1];i++) {
-            *(double *)(pyA->data + \
-                        i*pyA->strides[1] + \
-                        j*pyA->strides[0]) = dblArray[i][j];
+            *(double *)(PyArray_DATA(pyA) + \
+                        i * PyArray_STRIDES(pyA)[1] + \
+                        j * PyArray_STRIDES(pyA)[0]) = dblArray[i][j];
         }
     }
 
@@ -142,7 +142,7 @@ void print_PyArray(PyObject *array) {
     //printf("-- ... nd = %d\n", a->nd);
     //printf("-- ... dim. 1 size = %d\n", a->dimensions[0]);
     //printf("-- ... [ ");
-    for (i=0;i<a->dimensions[0];i++) {
+    for (i=0;i<PyArray_DIMS(a)[0];i++) {
         //printf("%f ",*(double *)(a->data + i*a->strides[0]));
     }
     //printf("]\n");
