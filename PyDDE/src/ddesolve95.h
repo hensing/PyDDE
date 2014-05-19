@@ -11,11 +11,15 @@
 
 #include <stdio.h>
 
+//#define PY_ARRAY_UNIQUE_SYMBOL Py_Array_DDE
+//#include <Python.h>
+//#include <numpy/arrayobject.h>
+
 typedef struct { 
 	int no_var, no_otherVars;
 	int nhv,nlag,nsw;
 	double dt,t0,t1,tol;
-	long hbsize;
+	int hbsize;
 	char **cname,*initialtext,*initialtitle,**cinfo;
 	FILE *file;
 	int quit,newrun,cont,*findex,fileno;

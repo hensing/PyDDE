@@ -12,10 +12,8 @@
 #include "ddeq.h"
 #include "ddesolve95.h"
 
-#ifndef PY_ARRAY_UNIQUE_SYMBOL
 #define PY_ARRAY_UNIQUE_SYMBOL Py_Array_DDE
-#endif
-
+#include <Python.h>
 #include <numpy/arrayobject.h>
 
 extern globaldatatype data; /* ddesolve95.c */
@@ -27,7 +25,7 @@ extern globaldatatype data; /* ddesolve95.c */
 // Some variables it is convenient to make external to functions
 static double *initstateDbl, *statescaleDbl, *cDbl, *otimesDbl;
 static int no_cons, no_vars, nhv, nlag, nsw, no_otimes;
-static long hbsize;
+static int hbsize;
 static double dt, t0, t1, tol;
 extern int failed;
 
@@ -228,7 +226,7 @@ static PyObject *wrap_dde(PyObject *self, PyObject *args) {
     //printf("This is dde\n");
 
     // get the arguments, two tuples giving problem and solver parameters
-    if (!PyArg_ParseTuple(args,"(iiiiiiddOOOOOOO)(dldO)",\
+    if (!PyArg_ParseTuple(args,"(iiiiiiddOOOOOOO)(didO)",\
                           &no_vars,&no_cons,&nhv,&nlag,&nsw,&no_otimes,\
                           &t0,&t1,\
                           &initstateObj,&cObj,&otimesObj,\

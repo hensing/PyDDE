@@ -45,6 +45,10 @@
 #include <stdio.h>
 #include <math.h>
 
+//#define PY_ARRAY_UNIQUE_SYMBOL Py_Array_DDE
+//#define NO_IMPORT_ARRAY
+//#include <Python.h>
+//#include <numpy/arrayobject.h>
 
 #define ERRCON 1.89e-4
 #define SWITCHES
@@ -90,7 +94,7 @@ res=(( (g0)*(HeRmItE_xx12+2.0*HeRmItE_xx0*HeRmItE_xx1) \
 /***************************************************************************/
 #include "ddeq.h"
 
-long accepted=0L,rejected=0L;
+int accepted=0,rejected=0;
 histype history;
 
 
@@ -171,10 +175,10 @@ be the same pointer/array */
 
 
 void inithisbuff(nhv,histsize,nlag)
-	int nhv,nlag;long histsize;
+	int nhv,nlag;int histsize;
 
 	/* sets up the global structure "history" and
-	   sets the global long integer history.offset to zero
+	   sets the global int integer history.offset to zero
 	   4/10/95, if it's been called before it clears up the old version first 23/11/95*/
 
 { static int oldnhv=0;
@@ -192,12 +196,12 @@ void inithisbuff(nhv,histsize,nlag)
 	}
 	oldnhv=nhv;
 	if (!nhv) return;
-	history.no=(long)nhv;
+	history.no=(int)nhv;
 	//printf("size = %d\n", histsize);
 	history.size=histsize;
-	history.lagmarker=(long **)calloc((size_t)nhv,sizeof(long *));
+	history.lagmarker=(int **)calloc((size_t)nhv,sizeof(int *));
 	for (i=0;i<nhv;i++)
-		history.lagmarker[i]=(long *)calloc((size_t)nlag,sizeof(long));
+		history.lagmarker[i]=(int *)calloc((size_t)nlag,sizeof(int));
 	history.clock=(double *)calloc((size_t)history.size,sizeof(double));
 	history.buff=(double **)calloc((size_t)nhv,sizeof(double *));
 	for (i=0;i<nhv;i++)
@@ -206,9 +210,9 @@ void inithisbuff(nhv,histsize,nlag)
 	for (i=0;i<nhv;i++)
 		history.gbuff[i]=(double *)calloc((size_t)history.size,sizeof(double));
 	if (!history.gbuff[nhv-1])
-	{ eRROR("History buffer too long");
+	{ eRROR("History buffer too int");
 	}
-	history.offset= -1L;
+	history.offset= -1;
 }
 
 void updatehistory(g,s,c,t)
@@ -217,7 +221,7 @@ void updatehistory(g,s,c,t)
 	/* updates the history record by calling the storehistory() moving the
 	   offset and updating and recording the time 4/10/95*/
 
-{ static int first=1, oldhno=-1L;
+{ static int first=1, oldhno=-1;
 	static double *his,*ghis;
 	int i;
 	if (! history.no) return;
@@ -227,7 +231,7 @@ void updatehistory(g,s,c,t)
 		ghis=(double *)calloc((size_t)history.no,sizeof(double));
 		oldhno=(int)history.no;
 		history.first_time=t;
-		history.offset=-1L;
+		history.offset=-1;
 	}
 	storehistory(his,ghis,g,s,c,t);
 	//printf("t = %f\n", t);
@@ -235,7 +239,7 @@ void updatehistory(g,s,c,t)
 	//printf("offset = %d\n", history.offset);
 	history.offset++;
 	if (history.offset==history.size) {
-		history.offset=0L;
+		history.offset=0;
 	}
 	//printf("offset = %d\n", history.offset);
 	history.clock[history.offset]=t;
@@ -257,22 +261,22 @@ double pastgradient(i,t,markno)
 	   pastvalue 20/11/95)*/
 
 {
-	long k1,k,offset,offsetplus,size;
+	int k1,k,offset,offsetplus,size;
 	double res,*y,*g,*x,x0,x1;
 	y=history.buff[i];g=history.gbuff[i];
 	x=history.clock; /*local pointers improve address efficiency*/
 	offset=history.offset;size=history.size;
-	offsetplus=offset+1L; if (offsetplus==size) offsetplus=0L;
+	offsetplus=offset+1; if (offsetplus==size) offsetplus=0;
 	k=history.lagmarker[i][markno];
-	k1=k+1L;if ((k1>=size)||(k1<0L)) k1=0L;
+	k1=k+1;if ((k1>=size)||(k1<0)) k1=0;
 	while ((x[k1]<t)&&(k1!=offset)) { 
-		k1++;if (k1==size) k1=0L;
+		k1++;if (k1==size) k1=0;
 	}
-	if (k1==0L) k=size-1L; else k=k1-1L;
+	if (k1==0) k=size-1; else k=k1-1;
 	while ((x[k]>t)&&(k!=offsetplus)) { 
-		if (k==0L) k=size-1L; else k--;
+		if (k==0) k=size-1; else k--;
 	}
-	k1=k+1L;if (k1==size) k1=0L;
+	k1=k+1;if (k1==size) k1=0;
 	if (t<x[k]) {
 		fprintf(stderr, "DDE Error: lag for variable %i too large at %g\n",i,history.last_time-t);
 		eRROR("Lag too large for history buffer - try increasing the value of hbsize");
@@ -295,21 +299,21 @@ double pastvalue(i,t,markno)
 	   assignment of one variable to another at the start: this is to save
 	   on address calculation and speed up the routine. 4/10/95*/
 
-{ long k1,k,offset,offsetplus,size;
+{ int k1,k,offset,offsetplus,size;
 	double res,*y,*g,*x,x0,x1;
 	y=history.buff[i];g=history.gbuff[i];
 	x=history.clock; /*local pointers improve address efficiency*/
 	offset=history.offset;size=history.size;
 	if (x[offset]==t) return(y[offset]);
-	offsetplus=offset+1L; if (offsetplus==size) offsetplus=0L;
+	offsetplus=offset+1; if (offsetplus==size) offsetplus=0;
 	k=history.lagmarker[i][markno];
-	k1=k+1L;if ((k1>=size)||(k1<0L)) k1=0L;
+	k1=k+1;if ((k1>=size)||(k1<0)) k1=0;
 	while ((x[k1]<t)&&(k1!=offset))
-	{ k1++;if (k1==size) k1=0L;}
-	if (k1==0L) k=size-1L; else k=k1-1L;
+	{ k1++;if (k1==size) k1=0;}
+	if (k1==0) k=size-1; else k=k1-1;
 	while ((x[k]>t)&&(k!=offsetplus))
-	{ if (k==0L) k=size-1L; else k--;}
-	k1=k+1L;if (k1==size) k1=0L;
+	{ if (k==0) k=size-1; else k--;}
+	k1=k+1;if (k1==size) k1=0;
 	if (t<x[k])
 	{
 		fprintf(stderr, "DDE Error: lag for variable %i too large at %g\nx[k]=%g   k=%li  t=%g\n",i,history.last_time-t,x[k],k,t);
@@ -497,7 +501,7 @@ void dde(s,c,t0,t1,dt,eps,otimes,no_otimes, ns,nsw,nhv,hbsize,nlag,reset,fixstep
 	double *otimes;  /* bjc 2007-05-08: an ordered array of times >= t0 at which 
 			    the state variables should be recorded for output */
 	int no_otimes;  /* bjc 2007-05-08: length of otimes */
-	long hbsize;    /* The number of elements to store in the history buffer */
+	int hbsize;    /* The number of elements to store in the history buffer */
 	int nsw,        /* numbwer of switches */
 	ns,         /* number of state variables */
 	nhv,        /* number of lagged variables */
@@ -511,7 +515,7 @@ void dde(s,c,t0,t1,dt,eps,otimes,no_otimes, ns,nsw,nhv,hbsize,nlag,reset,fixstep
 	static double *g,mindt,maxdt;
 	static double tout, oldt, *sout, *olds, *oldg; /* bjc 2007-05-08*/
 	static int first=1;
-	long i,iout=1L;
+	int i,iout=1;
 	int swi;
 	nswp=newsws=(double *)calloc(nsw,sizeof(double));
 	swp=sws=(double *)calloc(nsw,sizeof(double));

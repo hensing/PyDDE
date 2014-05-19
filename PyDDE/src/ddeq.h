@@ -9,9 +9,13 @@
 #ifndef DDE_HEADER_PY_IN
 #define DDE_HEADER_PY_IN 1
 
+//#define PY_ARRAY_UNIQUE_SYMBOL Py_Array_DDE
+//#include <Python.h>
+//#include <numpy/arrayobject.h>
+
 typedef struct
 { double **buff,**gbuff,*clock,last_time,first_time;
-  long offset,size,no,**lagmarker;
+  int offset,size,no,**lagmarker;
 } histype;
 
 
@@ -72,7 +76,7 @@ void statescale(double *scale);
 
 void rk23(double *state,double *newstate,double *g,double *newg,double *error,
 	  double *coeff,int ns,double time,double dt);
-void inithisbuff(int nhv,long histsize,int nlag);
+void inithisbuff(int nhv,int histsize,int nlag);
 void updatehistory(double *g,double *s,double *c,double t);
 double pastvalue(int i,double t,int markno);
 double pastgradient(int i,double t,int markno);
@@ -82,6 +86,6 @@ double istep(double *sw0,double *newsws,double *s0,double *news,double *g,
 	     int ns,int *flickedswitch);
 void dde(double *s,double *c,double t0,double t1,double *dt,double eps,
 	 double *otimes, int no_otimes, int ns,int nsw,int nhv,
-	 long hbsize,int nlag,int reset, int fixstep); /* bjc 2007-05-08*/
+	 int hbsize,int nlag,int reset, int fixstep); /* bjc 2007-05-08*/
 #endif
 #endif

@@ -10,6 +10,11 @@
 #include "ddesolve95.h"
 #include "ddeq.h"
 
+/*#define PY_ARRAY_UNIQUE_SYMBOL Py_Array_DDE*/
+/*#define NO_IMPORT_ARRAY*/
+/*#include <Python.h>*/
+/*#include <numpy/arrayobject.h>*/
+
 #define CH_BUF_SIZE 128
 
 globaldatatype data; /* MOVED from ddesolve95.h */
@@ -64,7 +69,7 @@ void numerics(double *c,int cont)
 	double t0, t1, dt, *otimes; /* bjc 2007-05-08*/
 	int ns, nsw, nhv, nlag, reset=1, fixstep=0, no_otimes; /* bjc 2007-05-08*/
 	static int first=1;
-	long hbsize;
+	int hbsize;
 	ns=data.no_var;
 	nsw=data.nsw;
 	nhv=data.nhv;
