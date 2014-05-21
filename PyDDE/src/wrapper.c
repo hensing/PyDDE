@@ -13,10 +13,52 @@
 #include "ddesolve95.h"
 
 #define PY_ARRAY_UNIQUE_SYMBOL Py_Array_DDE
-#include <Python.h>
 #include <numpy/arrayobject.h>
 
 extern globaldatatype data; /* ddesolve95.c */
+
+/***********************************************************/
+/* define logging function and logtypes for python.logging */
+/***********************************************************/
+enum logtypes {info, warning, error, debug};
+
+static void log_msg(int type, char *msg)
+{
+    static PyObject *logging = NULL;
+    static PyObject *string = NULL;
+
+    // import logging module on demand
+    if (logging == NULL){
+        logging = PyImport_ImportModuleNoBlock("logging");
+        if (logging == NULL)
+            PyErr_SetString(PyExc_ImportError,
+                "Could not import module 'logging'");
+    }
+
+    // build msg-string
+    string = Py_BuildValue("s", msg);
+
+    // call function depending on loglevel
+    switch (type)
+    {
+        case info:
+            PyObject_CallMethod(logging, "info", "O", string);
+            break;
+
+        case warning:
+            PyObject_CallMethod(logging, "warn", "O", string);
+            break;
+
+        case error:
+            PyObject_CallMethod(logging, "error", "O", string);
+            break;
+
+        case debug:
+            PyObject_CallMethod(logging, "debug", "O", string);
+            break;
+    }
+    Py_DECREF(string);
+}
 
 /***********************************************************/
 /* Stuff for initial states and statescale (error control) */
@@ -288,8 +330,10 @@ static PyObject *wrap_dde(PyObject *self, PyObject *args) {
     //printf("Data successfully loaded.\n");
     setupglobaldata(no_vars, nsw, settings, otimesDbl, no_otimes);
     numerics(cDbl, 0);
-    if (failed) mESSAGE("Integration failed!  Outputs are None.");
-    else mESSAGE("Integration completed without error.");
+    if (failed)
+        log_msg(error, "Integration failed! Outputs are None.");
+    else
+        log_msg(info, "Integration completed without error.");
 
     if (failed) { // Something went wrong (user should see why) so return None.
         Py_INCREF(Py_None); // Be       nice to the reference count.
